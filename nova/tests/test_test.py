@@ -18,8 +18,12 @@
 
 """Tests for the testing base code."""
 
+from nova import flags
 from nova import rpc
 from nova import test
+
+
+flags.DECLARE('echo_manager', 'nova.echo.manager')
 
 
 class IsolationTestCase(test.TestCase):
@@ -30,11 +34,11 @@ class IsolationTestCase(test.TestCase):
 
     """
     def test_service_isolation(self):
-        self.start_service('compute')
+        self.start_service('echo')
 
     def test_rpc_consumer_isolation(self):
         connection = rpc.Connection.instance(new=True)
-        consumer = rpc.TopicAdapterConsumer(connection, topic='compute')
+        consumer = rpc.TopicAdapterConsumer(connection, topic='echo')
         consumer.register_callback(
                 lambda x, y: self.fail('I should never be called'))
         consumer.attach_to_eventlet()

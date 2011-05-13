@@ -40,7 +40,7 @@ class RpcTestCase(test.TestCase):
                                             topic='test',
                                             proxy=self.receiver)
         self.consumer.attach_to_eventlet()
-        self.context = context.get_admin_context()
+        self.context = context.RequestContext('test', 'testing')
 
     def test_call_succeed(self):
         """Get a value through rpc call"""

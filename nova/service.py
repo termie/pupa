@@ -78,18 +78,6 @@ class Service(object):
         logging.audit(_('Starting %(topic)s node (version %(vcs_string)s)'),
                       {'topic': self.topic, 'vcs_string': vcs_string})
         self.manager.init_host()
-        self.model_disconnected = False
-        ctxt = context.get_admin_context()
-        try:
-            service_ref = db.service_get_by_args(ctxt,
-                                                 self.host,
-                                                 self.binary)
-            self.service_id = service_ref['id']
-        except exception.NotFound:
-            self._create_service_ref(ctxt)
-
-        if 'nova-compute' == self.binary:
-            self.manager.update_available_resource(ctxt)
 
         conn1 = rpc.Connection.instance(new=True)
         conn2 = rpc.Connection.instance(new=True)
@@ -121,15 +109,6 @@ class Service(object):
             periodic.start(interval=self.periodic_interval, now=False)
             self.timers.append(periodic)
 
-    def _create_service_ref(self, context):
-        zone = FLAGS.node_availability_zone
-        service_ref = db.service_create(context,
-                                        {'host': self.host,
-                                         'binary': self.binary,
-                                         'topic': self.topic,
-                                         'report_count': 0,
-                                         'availability_zone': zone})
-        self.service_id = service_ref['id']
 
     def __getattr__(self, key):
         manager = self.__dict__.get('manager', None)
@@ -168,10 +147,6 @@ class Service(object):
     def kill(self):
         """Destroy the service object in the datastore."""
         self.stop()
-        try:
-            db.service_destroy(context.get_admin_context(), self.service_id)
-        except exception.NotFound:
-            logging.warn(_('Service killed that has no database entry'))
 
     def stop(self):
         for x in self.timers:
@@ -190,34 +165,11 @@ class Service(object):
 
     def periodic_tasks(self):
         """Tasks to be run at a periodic interval."""
-        self.manager.periodic_tasks(context.get_admin_context())
+        self.manager.periodic_tasks()
 
     def report_state(self):
         """Update the state of this service in the datastore."""
-        ctxt = context.get_admin_context()
-        try:
-            try:
-                service_ref = db.service_get(ctxt, self.service_id)
-            except exception.NotFound:
-                logging.debug(_('The service database object disappeared, '
-                                'Recreating it.'))
-                self._create_service_ref(ctxt)
-                service_ref = db.service_get(ctxt, self.service_id)
-
-            db.service_update(ctxt,
-                             self.service_id,
-                             {'report_count': service_ref['report_count'] + 1})
-
-            # TODO(termie): make this pattern be more elegant.
-            if getattr(self, 'model_disconnected', False):
-                self.model_disconnected = False
-                logging.error(_('Recovered model server connection!'))
-
-        # TODO(vish): this should probably only catch connection errors
-        except Exception:  # pylint: disable=W0702
-            if not getattr(self, 'model_disconnected', False):
-                self.model_disconnected = True
-                logging.exception(_('model server went away'))
+        pass
 
 
 class WsgiService(object):

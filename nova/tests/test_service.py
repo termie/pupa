@@ -30,7 +30,6 @@ from nova import rpc
 from nova import test
 from nova import service
 from nova import manager
-from nova.compute import manager as compute_manager
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("fake_manager", "nova.tests.test_service.FakeManager",
@@ -66,30 +65,6 @@ class ServiceManagerTestCase(test.TestCase):
                                'nova.tests.test_service.FakeManager')
         serv.start()
         self.assertEqual(serv.test_method(), 'service')
-
-
-class ServiceFlagsTestCase(test.TestCase):
-    def test_service_enabled_on_create_based_on_flag(self):
-        self.flags(enable_new_services=True)
-        host = 'foo'
-        binary = 'nova-fake'
-        app = service.Service.create(host=host, binary=binary)
-        app.start()
-        app.stop()
-        ref = db.service_get(context.get_admin_context(), app.service_id)
-        db.service_destroy(context.get_admin_context(), app.service_id)
-        self.assert_(not ref['disabled'])
-
-    def test_service_disabled_on_create_based_on_flag(self):
-        self.flags(enable_new_services=False)
-        host = 'foo'
-        binary = 'nova-fake'
-        app = service.Service.create(host=host, binary=binary)
-        app.start()
-        app.stop()
-        ref = db.service_get(context.get_admin_context(), app.service_id)
-        db.service_destroy(context.get_admin_context(), app.service_id)
-        self.assert_(ref['disabled'])
 
 
 class ServiceTestCase(test.TestCase):
@@ -143,162 +118,8 @@ class ServiceTestCase(test.TestCase):
                        'report_count': 0,
                        'id': 1}
 
-        service.db.service_get_by_args(mox.IgnoreArg(),
-                                       host,
-                                       binary).AndRaise(exception.NotFound())
-        service.db.service_create(mox.IgnoreArg(),
-                                  service_create).AndReturn(service_ref)
         self.mox.ReplayAll()
 
         app.start()
         app.stop()
         self.assert_(app)
-
-    # We're testing sort of weird behavior in how report_state decides
-    # whether it is disconnected, it looks for a variable on itself called
-    # 'model_disconnected' and report_state doesn't really do much so this
-    # these are mostly just for coverage
-    def test_report_state_no_service(self):
-        host = 'foo'
-        binary = 'bar'
-        topic = 'test'
-        service_create = {'host': host,
-                          'binary': binary,
-                          'topic': topic,
-                          'report_count': 0,
-                          'availability_zone': 'nova'}
-        service_ref = {'host': host,
-                          'binary': binary,
-                          'topic': topic,
-                          'report_count': 0,
-                          'availability_zone': 'nova',
-                          'id': 1}
-
-        service.db.service_get_by_args(mox.IgnoreArg(),
-                                      host,
-                                      binary).AndRaise(exception.NotFound())
-        service.db.service_create(mox.IgnoreArg(),
-                                  service_create).AndReturn(service_ref)
-        service.db.service_get(mox.IgnoreArg(),
-                               service_ref['id']).AndReturn(service_ref)
-        service.db.service_update(mox.IgnoreArg(), service_ref['id'],
-                                  mox.ContainsKeyValue('report_count', 1))
-
-        self.mox.ReplayAll()
-        serv = service.Service(host,
-                               binary,
-                               topic,
-                               'nova.tests.test_service.FakeManager')
-        serv.start()
-        serv.report_state()
-
-    def test_report_state_newly_disconnected(self):
-        host = 'foo'
-        binary = 'bar'
-        topic = 'test'
-        service_create = {'host': host,
-                          'binary': binary,
-                          'topic': topic,
-                          'report_count': 0,
-                          'availability_zone': 'nova'}
-        service_ref = {'host': host,
-                          'binary': binary,
-                          'topic': topic,
-                          'report_count': 0,
-                          'availability_zone': 'nova',
-                          'id': 1}
-
-        service.db.service_get_by_args(mox.IgnoreArg(),
-                                      host,
-                                      binary).AndRaise(exception.NotFound())
-        service.db.service_create(mox.IgnoreArg(),
-                                  service_create).AndReturn(service_ref)
-        service.db.service_get(mox.IgnoreArg(),
-                               mox.IgnoreArg()).AndRaise(Exception())
-
-        self.mox.ReplayAll()
-        serv = service.Service(host,
-                               binary,
-                               topic,
-                               'nova.tests.test_service.FakeManager')
-        serv.start()
-        serv.report_state()
-        self.assert_(serv.model_disconnected)
-
-    def test_report_state_newly_connected(self):
-        host = 'foo'
-        binary = 'bar'
-        topic = 'test'
-        service_create = {'host': host,
-                          'binary': binary,
-                          'topic': topic,
-                          'report_count': 0,
-                          'availability_zone': 'nova'}
-        service_ref = {'host': host,
-                          'binary': binary,
-                          'topic': topic,
-                          'report_count': 0,
-                          'availability_zone': 'nova',
-                          'id': 1}
-
-        service.db.service_get_by_args(mox.IgnoreArg(),
-                                      host,
-                                      binary).AndRaise(exception.NotFound())
-        service.db.service_create(mox.IgnoreArg(),
-                                  service_create).AndReturn(service_ref)
-        service.db.service_get(mox.IgnoreArg(),
-                               service_ref['id']).AndReturn(service_ref)
-        service.db.service_update(mox.IgnoreArg(), service_ref['id'],
-                                  mox.ContainsKeyValue('report_count', 1))
-
-        self.mox.ReplayAll()
-        serv = service.Service(host,
-                               binary,
-                               topic,
-                               'nova.tests.test_service.FakeManager')
-        serv.start()
-        serv.model_disconnected = True
-        serv.report_state()
-
-        self.assert_(not serv.model_disconnected)
-
-    def test_compute_can_update_available_resource(self):
-        """Confirm compute updates their record of compute-service table."""
-        host = 'foo'
-        binary = 'nova-compute'
-        topic = 'compute'
-
-        # Any mocks are not working without UnsetStubs() here.
-        self.mox.UnsetStubs()
-        ctxt = context.get_admin_context()
-        service_ref = db.service_create(ctxt, {'host': host,
-                                               'binary': binary,
-                                               'topic': topic})
-        serv = service.Service(host,
-                               binary,
-                               topic,
-                               'nova.compute.manager.ComputeManager')
-
-        # This testcase want to test calling update_available_resource.
-        # No need to call periodic call, then below variable must be set 0.
-        serv.report_interval = 0
-        serv.periodic_interval = 0
-
-        # Creating mocks
-        self.mox.StubOutWithMock(service.rpc.Connection, 'instance')
-        service.rpc.Connection.instance(new=mox.IgnoreArg())
-        service.rpc.Connection.instance(new=mox.IgnoreArg())
-        service.rpc.Connection.instance(new=mox.IgnoreArg())
-        self.mox.StubOutWithMock(serv.manager.driver,
-                                 'update_available_resource')
-        serv.manager.driver.update_available_resource(mox.IgnoreArg(), host)
-
-        # Just doing start()-stop(), not confirm new db record is created,
-        # because update_available_resource() works only in
-        # libvirt environment. This testcase confirms
-        # update_available_resource() is called. Otherwise, mox complains.
-        self.mox.ReplayAll()
-        serv.start()
-        serv.stop()
-
-        db.service_destroy(ctxt, service_ref['id'])
