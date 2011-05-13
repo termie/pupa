@@ -48,6 +48,17 @@ LOG = logging.getLogger('nova.rpc')
 
 FLAGS = flags.FLAGS
 flags.DEFINE_integer('rpc_thread_pool_size', 1024, 'Size of RPC thread pool')
+flags.DEFINE_boolean('fake_rabbit', False, 'use a fake rabbit')
+flags.DEFINE_string('rabbit_host', 'localhost', 'rabbit host')
+flags.DEFINE_integer('rabbit_port', 5672, 'rabbit port')
+flags.DEFINE_string('rabbit_userid', 'guest', 'rabbit userid')
+flags.DEFINE_string('rabbit_password', 'guest', 'rabbit password')
+flags.DEFINE_string('rabbit_virtual_host', '/', 'rabbit virtual host')
+flags.DEFINE_integer('rabbit_retry_interval', 10,
+                     'rabbit connection retry interval')
+flags.DEFINE_integer('rabbit_max_retries', 12, 'rabbit connection attempts')
+flags.DEFINE_string('control_exchange', 'nova',
+                    'the main exchange to connect to')
 
 
 class Connection(carrot_connection.BrokerConnection):
@@ -57,14 +68,16 @@ class Connection(carrot_connection.BrokerConnection):
     def instance(cls, new=True):
         """Returns the instance."""
         if new or not hasattr(cls, '_instance'):
-            params = dict(hostname=FLAGS.rabbit_host,
-                          port=FLAGS.rabbit_port,
-                          userid=FLAGS.rabbit_userid,
-                          password=FLAGS.rabbit_password,
-                          virtual_host=FLAGS.rabbit_virtual_host)
-
+            params = {}
             if FLAGS.fake_rabbit:
                 params['backend_cls'] = fakerabbit.Backend
+            else:
+                params.update(dict(hostname=FLAGS.rabbit_host,
+                                   port=FLAGS.rabbit_port,
+                                   userid=FLAGS.rabbit_userid,
+                                   password=FLAGS.rabbit_password,
+                                   virtual_host=FLAGS.rabbit_virtual_host))
+
 
             # NOTE(vish): magic is fun!
             # pylint: disable=W0142

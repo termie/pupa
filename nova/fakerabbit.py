@@ -23,6 +23,7 @@ import Queue as queue
 from carrot.backends import base
 from eventlet import greenthread
 
+from nova import flags
 from nova import log as logging
 
 

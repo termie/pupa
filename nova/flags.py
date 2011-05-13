@@ -274,8 +274,6 @@ DEFINE_integer('osapi_max_limit', 1000,
 
 DEFINE_string('state_path', os.path.join(os.path.dirname(__file__), '../'),
               "Top-level directory for maintaining nova's state")
-DEFINE_string('lock_path', os.path.join(os.path.dirname(__file__), '../'),
-              'Directory for lock files')
 DEFINE_string('logdir', None, 'output to a per-service log file in named '
                               'directory')
 

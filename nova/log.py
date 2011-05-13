@@ -64,6 +64,7 @@ flags.DEFINE_list('default_log_levels',
                   'list of logger=LEVEL pairs')
 flags.DEFINE_bool('use_syslog', False, 'output to syslog')
 flags.DEFINE_string('logfile', None, 'output to named file')
+flags.DEFINE_bool('verbose', False, 'use verbose output')
 
 
 # A list of things we want to replicate from logging.

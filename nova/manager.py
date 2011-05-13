@@ -55,9 +55,6 @@ This module provides Manager, a base class for managers.
 
 from nova import flags
 from nova import log as logging
-from nova import utils
-from nova.db import base
-from nova.scheduler import api
 
 
 FLAGS = flags.FLAGS
@@ -66,12 +63,11 @@ FLAGS = flags.FLAGS
 LOG = logging.getLogger('nova.manager')
 
 
-class Manager(base.Base):
-    def __init__(self, host=None, db_driver=None):
+class Manager(object):
+    def __init__(self, host=None):
         if not host:
             host = FLAGS.host
         self.host = host
-        super(Manager, self).__init__(db_driver)
 
     def periodic_tasks(self, context=None):
         """Tasks to be run at a periodic interval."""
@@ -84,32 +80,3 @@ class Manager(base.Base):
 
         """
         pass
-
-
-class SchedulerDependentManager(Manager):
-    """Periodically send capability updates to the Scheduler services.
-
-    Services that need to update the Scheduler of their capabilities
-    should derive from this class. Otherwise they can derive from
-    manager.Manager directly. Updates are only sent after
-    update_service_capabilities is called with non-None values.
-
-    """
-
-    def __init__(self, host=None, db_driver=None, service_name='undefined'):
-        self.last_capabilities = None
-        self.service_name = service_name
-        super(SchedulerDependentManager, self).__init__(host, db_driver)
-
-    def update_service_capabilities(self, capabilities):
-        """Remember these capabilities to send on next periodic update."""
-        self.last_capabilities = capabilities
-
-    def periodic_tasks(self, context=None):
-        """Pass data back to the scheduler at a periodic interval."""
-        if self.last_capabilities:
-            LOG.debug(_('Notifying Schedulers of capabilities ...'))
-            api.update_service_capabilities(context, self.service_name,
-                                self.host, self.last_capabilities)
-
-        super(SchedulerDependentManager, self).periodic_tasks(context)

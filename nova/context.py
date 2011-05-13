@@ -69,9 +69,9 @@ class RequestContext(object):
     def user(self):
         # NOTE(vish): Delay import of manager, so that we can import this
         #             file from manager.
-        from nova.auth import manager
         if not self._user:
             try:
+                from nova.auth import manager
                 self._user = manager.AuthManager().get_user(self.user_id)
             except exception.NotFound:
                 pass
@@ -81,9 +81,9 @@ class RequestContext(object):
     def project(self):
         # NOTE(vish): Delay import of manager, so that we can import this
         #             file from manager.
-        from nova.auth import manager
         if not self._project:
             try:
+                from nova.auth import manager
                 auth_manager = manager.AuthManager()
                 self._project = auth_manager.get_project(self.project_id)
             except exception.NotFound:

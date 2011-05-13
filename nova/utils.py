@@ -48,8 +48,14 @@ from nova import log as logging
 
 
 LOG = logging.getLogger("nova.utils")
-TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+
+
 FLAGS = flags.FLAGS
+flags.DEFINE_string('lock_path', os.path.join(os.path.dirname(__file__), '../'),
+                    'Directory for lock files')
+
+
+TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
 def import_class(import_str):
