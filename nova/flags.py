@@ -263,49 +263,6 @@ def _get_my_ip():
 # Define any app-specific flags in their own files, docs at:
 # http://code.google.com/p/python-gflags/source/browse/trunk/gflags.py#a9
 DEFINE_string('my_ip', _get_my_ip(), 'host ip address')
-DEFINE_list('region_list',
-            [],
-            'list of region=fqdn pairs separated by commas')
-DEFINE_string('connection_type', 'libvirt', 'libvirt, xenapi or fake')
-DEFINE_string('aws_access_key_id', 'admin', 'AWS Access ID')
-DEFINE_string('aws_secret_access_key', 'admin', 'AWS Access Key')
-DEFINE_integer('glance_port', 9292, 'glance port')
-DEFINE_string('glance_host', '$my_ip', 'glance host')
-DEFINE_integer('s3_port', 3333, 's3 port')
-DEFINE_string('s3_host', '$my_ip', 's3 host (for infrastructure)')
-DEFINE_string('s3_dmz', '$my_ip', 's3 dmz ip (for instances)')
-DEFINE_string('compute_topic', 'compute', 'the topic compute nodes listen on')
-DEFINE_string('console_topic', 'console',
-              'the topic console proxy nodes listen on')
-DEFINE_string('scheduler_topic', 'scheduler',
-              'the topic scheduler nodes listen on')
-DEFINE_string('volume_topic', 'volume', 'the topic volume nodes listen on')
-DEFINE_string('network_topic', 'network', 'the topic network nodes listen on')
-DEFINE_string('ajax_console_proxy_topic', 'ajax_proxy',
-              'the topic ajax proxy nodes listen on')
-DEFINE_string('ajax_console_proxy_url',
-              'http://127.0.0.1:8000',
-              'location of ajax console proxy, \
-               in the form "http://127.0.0.1:8000"')
-DEFINE_string('ajax_console_proxy_port',
-               8000, 'port that ajax_console_proxy binds')
-DEFINE_bool('verbose', False, 'show debug output')
-DEFINE_boolean('fake_rabbit', False, 'use a fake rabbit')
-DEFINE_bool('fake_network', False,
-            'should we use fake network devices and addresses')
-DEFINE_string('rabbit_host', 'localhost', 'rabbit host')
-DEFINE_integer('rabbit_port', 5672, 'rabbit port')
-DEFINE_string('rabbit_userid', 'guest', 'rabbit userid')
-DEFINE_string('rabbit_password', 'guest', 'rabbit password')
-DEFINE_string('rabbit_virtual_host', '/', 'rabbit virtual host')
-DEFINE_integer('rabbit_retry_interval', 10, 'rabbit connection retry interval')
-DEFINE_integer('rabbit_max_retries', 12, 'rabbit connection attempts')
-DEFINE_string('control_exchange', 'nova', 'the main exchange to connect to')
-DEFINE_string('ec2_host', '$my_ip', 'ip of api server')
-DEFINE_string('ec2_dmz_host', '$my_ip', 'internal ip of api server')
-DEFINE_integer('ec2_port', 8773, 'cloud controller port')
-DEFINE_string('ec2_scheme', 'http', 'prefix for ec2')
-DEFINE_string('ec2_path', '/services/Cloud', 'suffix for ec2')
 DEFINE_string('osapi_extensions_path', '/var/lib/nova/extensions',
                'default directory for nova extensions')
 DEFINE_string('osapi_host', '$my_ip', 'ip of api server')
@@ -315,22 +272,6 @@ DEFINE_string('osapi_path', '/v1.0/', 'suffix for openstack')
 DEFINE_integer('osapi_max_limit', 1000,
                'max number of items returned in a collection response')
 
-DEFINE_string('default_project', 'openstack', 'default project for openstack')
-DEFINE_string('default_image', 'ami-11111',
-              'default image to use, testing only')
-DEFINE_string('default_instance_type', 'm1.small',
-              'default instance type to use, testing only')
-DEFINE_string('null_kernel', 'nokernel',
-              'kernel image that indicates not to use a kernel,'
-              ' but to use a raw disk image instead')
-
-DEFINE_integer('vpn_image_id', 0, 'integer id for cloudpipe vpn server')
-DEFINE_string('vpn_key_suffix',
-              '-vpn',
-              'Suffix to add to project name for vpn key and secgroups')
-
-DEFINE_integer('auth_token_ttl', 3600, 'Seconds for auth tokens to linger')
-
 DEFINE_string('state_path', os.path.join(os.path.dirname(__file__), '../'),
               "Top-level directory for maintaining nova's state")
 DEFINE_string('lock_path', os.path.join(os.path.dirname(__file__), '../'),
@@ -338,41 +279,6 @@ DEFINE_string('lock_path', os.path.join(os.path.dirname(__file__), '../'),
 DEFINE_string('logdir', None, 'output to a per-service log file in named '
                               'directory')
 
-DEFINE_string('sqlite_db', 'nova.sqlite', 'file name for sqlite')
-DEFINE_string('sql_connection',
-              'sqlite:///$state_path/$sqlite_db',
-              'connection string for sql database')
-DEFINE_integer('sql_idle_timeout',
-              3600,
-              'timeout for idle sql database connections')
-DEFINE_integer('sql_max_retries', 12, 'sql connection attempts')
-DEFINE_integer('sql_retry_interval', 10, 'sql connection retry interval')
-
-DEFINE_string('compute_manager', 'nova.compute.manager.ComputeManager',
-              'Manager for compute')
-DEFINE_string('console_manager', 'nova.console.manager.ConsoleProxyManager',
-              'Manager for console proxy')
-DEFINE_string('network_manager', 'nova.network.manager.VlanManager',
-              'Manager for network')
-DEFINE_string('volume_manager', 'nova.volume.manager.VolumeManager',
-              'Manager for volume')
-DEFINE_string('scheduler_manager', 'nova.scheduler.manager.SchedulerManager',
-              'Manager for scheduler')
-
-# The service to use for image search and retrieval
-DEFINE_string('image_service', 'nova.image.local.LocalImageService',
-              'The service to use for retrieving and searching for images.')
-
 DEFINE_string('host', socket.gethostname(),
               'name of this node')
 
-DEFINE_string('node_availability_zone', 'nova',
-              'availability zone of this node')
-
-DEFINE_list('memcached_servers', None,
-            'Memcached servers or None for in process cache.')
-
-DEFINE_string('zone_name', 'nova', 'name of this zone')
-DEFINE_list('zone_capabilities',
-                ['hypervisor=xenserver;kvm', 'os=linux;windows'],
-                 'Key/Multi-value list representng capabilities of this zone')
